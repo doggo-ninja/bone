@@ -175,7 +175,7 @@ const updateListeners = () => {
         document.getElementById('copy-link').addEventListener('click', () => {
             clipboard.write({
                 text: state.url,
-                html: `<a href='${escape(state.url)}'>${escape(state.url)}</a>`,
+                html: `<a href='${state.url}'>${state.url}</a>`,
                 bookmark: state.name
             })
 

@@ -64,7 +64,7 @@ const updateWatcher = () => {
     
             clipboard.write({
                 text: json.url,
-                html: `<a href='${escape(json.url)}'>${escape(json.url)}</a>`,
+                html: `<a href='${json.url}'>${json.url}</a>`,
                 bookmark: basename
             })
     
