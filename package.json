@@ -14,8 +14,7 @@
         "form-data": "^3.0.0",
         "menubar": "^8.0.2",
         "node-fetch": "^2.6.0",
-        "progress-stream": "^2.0.0",
-        "update-electron-app": "^1.5.0"
+        "progress-stream": "^2.0.0"
     },
     "scripts": {
         "start": "electron-forge start",

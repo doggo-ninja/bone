@@ -1,5 +1,3 @@
-require('update-electron-app')()
-
 const Store = require('electron-store')
 const { menubar } = require('menubar')
 const { default: fetch } = require('node-fetch')
@@ -10,6 +8,8 @@ const pathLib = require('path')
 const url = require('url')
 const progress = require('progress-stream')
 const fs = require('fs')
+
+app.setLoginItemSettings({ openAtLogin: true })
 
 const store = new Store({
     defaults: {
