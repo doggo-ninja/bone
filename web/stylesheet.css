@@ -1,0 +1,133 @@
+:root {
+    --background: #000000;
+    --foreground: #ffffff;
+    --accent: #dfdfdf;
+    --light-accent: #ffffff;
+    --extra-dim: #1f1f1f;
+    --dim-border: #404040;
+    --dim: #878787;
+}
+
+@media (prefers-color-scheme: light) {
+    :root {
+        --background: #ffffff;
+        --foreground: #000000;
+        --accent: #1f1f1f;
+        --light-accent: #3b3b3b;
+        --extra-dim: #ebebeb;
+        --dim-border: #d4d4d4;
+        --dim: #8f8f8f;
+    }
+}
+
+body {
+    margin: 0;
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: 'Inter', sans-serif;
+}
+
+#app {
+    box-sizing: border-box;
+    padding: 36px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 100vh;
+    overflow: auto;
+}
+
+h2, p {
+    user-select: none;
+    pointer-events: none;
+}
+
+h2 {
+    font-size: 1.25rem;
+    font-weight: bold;
+    margin: 0;
+}
+
+p {
+    font-size: 1rem;
+    font-weight: normal;
+    margin: 0;
+}
+
+button, input {
+    box-sizing: border-box;
+    font-size: 0.8125rem;
+    color: var(--foreground);
+    font-weight: normal;
+    font-family: inherit;
+    text-align: left;
+    border: 2px solid transparent;
+    background: none;
+    outline: none;
+    padding: 10px 16px;
+    display: block;
+}
+
+input {
+    border-color: var(--dim-border);
+    width: 100%;
+}
+
+button {
+    width: fit-content;
+    border-color: var(--accent);
+    cursor: pointer;
+    font-weight: bold;
+}
+
+button:not([disabled]):hover {
+    background-color: var(--accent);
+    color: var(--background);
+}
+
+button.main {
+    border-color: var(--accent);
+    background-color: var(--accent);
+    color: var(--background);
+}
+
+button.main:not([disabled]):hover {
+    border-color: var(--light-accent);
+    background-color: var(--light-accent);
+}
+
+button[disabled] {
+    cursor: not-allowed;
+    border-color: var(--extra-dim);
+    background-color: var(--extra-dim);
+    color: var(--dim);
+}
+
+.mb-lg {
+    margin-bottom: 20px;
+}
+
+.mb-sm {
+    margin-bottom: 10px;
+}
+
+.button-group {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin: -5px;
+}
+
+.button-group > button {
+    margin: 5px;
+}
+
+#here {
+    border-bottom: 2px dashed var(--foreground);
+    cursor: pointer;
+    pointer-events: all;
+}
+
+::placeholder {
+    color: var(--dim);
+}

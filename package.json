@@ -1,0 +1,26 @@
+{
+  "name": "bone",
+  "description": "the desktop client for uploading to doggo.ninja",
+  "version": "0.0.1",
+  "author": "Kognise",
+  "main": "index.js",
+  "dependencies": {
+    "chokidar": "^3.4.0",
+    "electron-store": "^5.1.1",
+    "form-data": "^3.0.0",
+    "menubar": "^8.0.2",
+    "node-fetch": "^2.6.0",
+    "progress-stream": "^2.0.0"
+  },
+  "scripts": {
+    "start": "electron .",
+    "dev": "nodemon -e js,html,css --exec electron ."
+  },
+  "devDependencies": {
+    "clipboardy": "^2.3.0",
+    "electron": "^9.0.0",
+    "node-notifier": "^7.0.0",
+    "nodemon": "^2.0.4",
+    "open": "^7.0.4"
+  }
+}
