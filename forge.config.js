@@ -9,6 +9,7 @@ module.exports = {
                 background: 'build/bacc.jpg',
                 iconSize: 84,
                 icon: 'build/icon.icns',
+                format: 'UDBZ',
                 contents: (opts) => [
                     {
                         x: 240,
