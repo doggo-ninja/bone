@@ -1,7 +1,7 @@
 const Store = require('electron-store')
 const { menubar } = require('menubar')
 const { default: fetch } = require('node-fetch')
-const { app, ipcMain, dialog, nativeTheme } = require('electron')
+const { app, ipcMain, dialog, nativeTheme, shell, clipboard, Notification } = require('electron')
 const FormData = require('form-data')
 const chokidar = require('chokidar')
 const pathLib = require('path')
@@ -17,6 +17,71 @@ const store = new Store({
 
 const initialState = {}
 let state = initialState
+
+let watcher
+let curWatchFolder
+
+const updateWatcher = () => {
+    const newWatchFolder = store.get('watchFolder')
+    if (newWatchFolder === curWatchFolder) return
+    curWatchFolder = newWatchFolder
+    if (watcher) watcher.close()
+    if (!curWatchFolder.trim()) return
+
+    console.log(`watching ${store.get('watchFolder')}`)
+
+    watcher = chokidar.watch(curWatchFolder, { ignoreInitial: true }).on('add', async (path) => {
+        if (!store.get('token')) return
+        const basename = pathLib.basename(path)
+    
+        if (/\.(png|jpe?g|gif)$/.test(basename) && !basename.startsWith('.')) {
+            console.log(`uploading ${basename}...`)
+    
+            const form = new FormData()
+            form.append('file', fs.createReadStream(path))
+    
+            const res = await fetch('https://doggo.ninja/', {
+                method: 'PUT',
+                headers: {
+                    ...form.getHeaders(),
+                    'Authorization': `Bearer ${store.get('token')}`
+                },
+                body: form
+            })
+            const json = await res.json()
+    
+            if (!json.url) {
+                const notification = new Notification({
+                    title: 'An error occurred during upload!',
+                    body: json.message || 'Uh ohhh...',
+                    urgency: 'critical'
+                })
+                notification.show()
+                return
+            }
+    
+            clipboard.write({
+                text: json.url,
+                html: `<a href='${escape(json.url)}'>${escape(json.url)}</a>`,
+                bookmark: basename
+            })
+    
+            const notification = new Notification({
+                title: `Uploaded ${basename}`,
+                body: 'The url has been copied to your clipboard',
+                urgency: 'low',
+                sound: 'submarine'
+            })
+            notification.on('click', () => shell.openExternal(json.url))
+            notification.show()
+    
+            fs.unlinkSync(path)
+        }
+    })
+}
+
+store.onDidChange('watchFolder', updateWatcher)
+updateWatcher()
 
 const upload = async (path, update) => {
     const form = new FormData()
