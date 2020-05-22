@@ -1,7 +1,7 @@
 {
     "name": "bone",
     "description": "the desktop client for uploading to doggo.ninja",
-    "version": "0.0.2",
+    "version": "0.0.3",
     "author": "Kognise",
     "main": "index.js",
     "repository": {
