@@ -1,3 +1,5 @@
+require('update-electron-app')()
+
 const Store = require('electron-store')
 const { menubar } = require('menubar')
 const { default: fetch } = require('node-fetch')
