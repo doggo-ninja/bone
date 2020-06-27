@@ -2,7 +2,6 @@ const Store = require('electron-store')
 const { menubar } = require('menubar')
 const { default: fetch } = require('node-fetch')
 const { app, ipcMain, dialog, nativeTheme, shell, clipboard, Notification } = require('electron')
-const FormData = require('form-data')
 const chokidar = require('chokidar')
 const pathLib = require('path')
 const url = require('url')
@@ -143,36 +142,6 @@ const updateWatcher = () => {
 store.onDidChange('watchFolder', updateWatcher)
 updateWatcher()
 
-const mb = menubar({
-    index: url.format({
-        protocol: 'file',
-        slashes: true,
-        pathname: pathLib.join(__dirname, 'web', 'index.html')
-    }),
-    icon: pathLib.join(__dirname, 'assets', 'menubar-Template.png'),
-    browserWindow: {
-        webPreferences: {
-            nodeIntegration: true
-        },
-        backgroundColor: nativeTheme.shouldUseDarkColors ? '#000000' : '#ffffff'
-    }
-})
-
-mb.on('ready', () => {
-    mb.tray.on('drop-files', (_, files) => {
-        if (this._blurTimeout) clearInterval(this._blurTimeout)
-        
-        mb._isVisible = true
-        mb.showWindow()
-
-        ipcMain.emit('drop', null, JSON.stringify({
-            path: files[0]
-        }))
-    })
-    
-    console.log('app is ready')
-})
-
 ipcMain.on('state', (_, raw) => {
     const message = JSON.parse(raw)
     state = message
@@ -249,4 +218,53 @@ ipcMain.on('ready', () => {
     } else {
         mb.window.webContents.send('state', state)
     }
+})
+
+app.on('ready', () => {
+    try {
+        fs.readdirSync(store.get('watchFolder'))
+    } catch {
+        if (process.platform === 'darwin') {
+            dialog.showMessageBoxSync({
+                type: 'error',
+                title: 'No FS Access!',
+                message: 'Looks like we can\'t access your filesystem.',
+                detail: 'Have you added Bone in System Preferences > Security & Privacy > Full Disk Access?'
+            })
+            return app.quit()
+        } else {
+            store.delete('token')
+            store.reset('watchFolder')
+        }
+    }
+
+    const mb = menubar({
+        index: url.format({
+            protocol: 'file',
+            slashes: true,
+            pathname: pathLib.join(__dirname, 'web', 'index.html')
+        }),
+        icon: pathLib.join(__dirname, 'assets', 'menubar-Template.png'),
+        browserWindow: {
+            webPreferences: {
+                nodeIntegration: true
+            },
+            backgroundColor: nativeTheme.shouldUseDarkColors ? '#000000' : '#ffffff'
+        }
+    })
+    
+    mb.on('ready', () => {
+        mb.tray.on('drop-files', (_, files) => {
+            if (this._blurTimeout) clearInterval(this._blurTimeout)
+            
+            mb._isVisible = true
+            mb.showWindow()
+    
+            ipcMain.emit('drop', null, JSON.stringify({
+                path: files[0]
+            }))
+        })
+        
+        console.log('app is ready')
+    })
 })

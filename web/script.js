@@ -202,10 +202,6 @@ document.ondrop = (event) => {
     if (!event.dataTransfer.files[0]) return
 
     send('drop', { path: event.dataTransfer.files[0].path })
-    firebase.analytics().logEvent('file_upload', {
-        file_extension: pathLib.extname(event.dataTransfer.files[0].path).slice(1).toLowerCase(),
-        method: 'drop_on_document'
-    })
 }
 
 send('ready')

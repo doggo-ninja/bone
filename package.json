@@ -1,7 +1,7 @@
 {
     "name": "bone",
     "description": "the desktop client for uploading to doggo.ninja",
-    "version": "0.0.4",
+    "version": "0.1.0",
     "author": "Kognise",
     "main": "index.js",
     "repository": {
@@ -11,7 +11,6 @@
     "dependencies": {
         "chokidar": "^3.4.0",
         "electron-store": "^5.1.1",
-        "form-data": "^3.0.0",
         "menubar": "^8.0.2",
         "node-fetch": "^2.6.0",
         "progress-stream": "^2.0.0"
