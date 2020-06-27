@@ -40,186 +40,6 @@ const upload = async (path, update = () => {}) => {
     return json
 }
 
-const initialState = {}
-let state = initialState
-
-let watcher
-let curWatchFolder
-
-const updateWatcher = () => {
-    const newWatchFolder = store.get('watchFolder')
-    if (newWatchFolder === curWatchFolder) return
-    curWatchFolder = newWatchFolder
-    if (watcher) watcher.close()
-    if (!curWatchFolder.trim()) return
-
-    console.log(`watching ${store.get('watchFolder')}`)
-
-    watcher = chokidar.watch(curWatchFolder, { ignoreInitial: true }).on('add', async (path) => {
-        if (!store.get('token')) return
-        const basename = pathLib.basename(path)
-    
-        if (/\.(png|jpe?g|gif)$/.test(basename) && !basename.startsWith('.')) {
-            console.log(`uploading ${basename}...`)
-
-            try {
-                const json = await upload(path)
-
-                clipboard.write({
-                    text: json.url,
-                    html: `<a href='${json.url}'>${json.url}</a>`,
-                    bookmark: basename
-                })
-
-                clipboard.write({
-                    text: json.url,
-                    html: `<a href='${json.url}'>${json.url}</a>`,
-                    bookmark: basename
-                })
-        
-                const notification = new Notification({
-                    title: `Uploaded ${basename}`,
-                    body: 'The url has been copied to your clipboard',
-                    urgency: 'low',
-                    sound: 'submarine'
-                })
-                notification.on('click', () => shell.openExternal(json.url))
-                notification.show()
-        
-                fs.unlink(path, () => {})
-            } catch (error) {
-                const notification = new Notification({
-                    title: 'An error occurred during upload!',
-                    body: error.message,
-                    urgency: 'critical'
-                })
-                notification.show()
-            }
-    
-            // const form = new FormData()
-            // form.append('file', fs.createReadStream(path))
-    
-            // const res = await fetch('https://doggo.ninja/', {
-            //     method: 'PUT',
-            //     headers: {
-            //         ...form.getHeaders(),
-            //         'Authorization': `Bearer ${store.get('token')}`
-            //     },
-            //     body: form
-            // })
-            // const json = await res.json()
-    
-            // if (!json.url) {
-                // const notification = new Notification({
-                //     title: 'An error occurred during upload!',
-                //     body: json.message || 'Uh ohhh...',
-                //     urgency: 'critical'
-                // })
-                // notification.show()
-            //     return
-            // }
-    
-            // clipboard.write({
-            //     text: json.url,
-            //     html: `<a href='${json.url}'>${json.url}</a>`,
-            //     bookmark: basename
-            // })
-    
-            // const notification = new Notification({
-            //     title: `Uploaded ${basename}`,
-            //     body: 'The url has been copied to your clipboard',
-            //     urgency: 'low',
-            //     sound: 'submarine'
-            // })
-            // notification.on('click', () => shell.openExternal(json.url))
-            // notification.show()
-    
-            // fs.unlinkSync(path)
-        }
-    })
-}
-
-store.onDidChange('watchFolder', updateWatcher)
-updateWatcher()
-
-ipcMain.on('state', (_, raw) => {
-    const message = JSON.parse(raw)
-    state = message
-})
-
-ipcMain.on('configure', (_, raw) => {
-    const message = JSON.parse(raw)
-    store.set('token', message.token)
-    store.set('watchFolder', message.watchFolder)
-
-    mb.window.webContents.send('state', {
-        mode: 'idle'
-    })
-})
-
-ipcMain.on('app-upload', async () => {
-    const { filePaths } = await dialog.showOpenDialog({ properties: [ 'openFile' ] })
-    if (filePaths.length === 0) return
-    ipcMain.emit('drop', null, JSON.stringify({
-        path: filePaths[0]
-    }))
-})
-
-ipcMain.on('drop', async (_, raw) => {
-    const { path } = JSON.parse(raw)
-
-    try {
-        const { shortName, url } = await upload(path, (progress) => {
-            mb.window.webContents.send('state', {
-                mode: 'uploading',
-                name: pathLib.basename(path),
-                progress
-            })
-        })
-        
-        mb.window.webContents.send('state', {
-            mode: 'uploaded',
-            name: pathLib.basename(path),
-            shortName,
-            url
-        })
-    } catch (error) {
-        mb.window.webContents.send('state', {
-            mode: 'upload-error',
-            message: error.message,
-            name: pathLib.basename(path)
-        })
-    }
-})
-
-ipcMain.on('quit', () => app.quit())
-ipcMain.on('logout', () => {
-    store.delete('token')
-    store.reset('watchFolder')
-
-    mb.window.webContents.send('state', {
-        mode: 'unconfigured',
-        watchFolder: store.get('watchFolder') || '',
-        token: store.get('token') || ''
-    })
-})
-
-ipcMain.on('ready', () => {
-    if (state === initialState) {
-        if (store.get('watchFolder') && store.get('token')) {
-            mb.window.webContents.send('state', { mode: 'idle' })
-        } else {
-            mb.window.webContents.send('state', {
-                mode: 'unconfigured',
-                watchFolder: store.get('watchFolder') || '',
-                token: store.get('token') || ''
-            })
-        }
-    } else {
-        mb.window.webContents.send('state', state)
-    }
-})
-
 app.on('ready', () => {
     try {
         fs.readdirSync(store.get('watchFolder'))
@@ -250,6 +70,146 @@ app.on('ready', () => {
                 nodeIntegration: true
             },
             backgroundColor: nativeTheme.shouldUseDarkColors ? '#000000' : '#ffffff'
+        }
+    })
+
+    const initialState = {}
+    let state = initialState
+
+    let watcher
+    let curWatchFolder
+
+    const updateWatcher = () => {
+        const newWatchFolder = store.get('watchFolder')
+        if (newWatchFolder === curWatchFolder) return
+        curWatchFolder = newWatchFolder
+        if (watcher) watcher.close()
+        if (!curWatchFolder.trim()) return
+
+        console.log(`watching ${store.get('watchFolder')}`)
+
+        watcher = chokidar.watch(curWatchFolder, { ignoreInitial: true }).on('add', async (path) => {
+            if (!store.get('token')) return
+            const basename = pathLib.basename(path)
+        
+            if (/\.(png|jpe?g|gif)$/.test(basename) && !basename.startsWith('.')) {
+                console.log(`uploading ${basename}...`)
+
+                try {
+                    const json = await upload(path)
+
+                    clipboard.write({
+                        text: json.url,
+                        html: `<a href='${json.url}'>${json.url}</a>`,
+                        bookmark: basename
+                    })
+
+                    clipboard.write({
+                        text: json.url,
+                        html: `<a href='${json.url}'>${json.url}</a>`,
+                        bookmark: basename
+                    })
+            
+                    const notification = new Notification({
+                        title: `Uploaded ${basename}`,
+                        body: 'The url has been copied to your clipboard',
+                        urgency: 'low',
+                        sound: 'submarine'
+                    })
+                    notification.on('click', () => shell.openExternal(json.url))
+                    notification.show()
+            
+                    fs.unlink(path, () => {})
+                } catch (error) {
+                    const notification = new Notification({
+                        title: 'An error occurred during upload!',
+                        body: error.message,
+                        urgency: 'critical'
+                    })
+                    notification.show()
+                }
+            }
+        })
+    }
+
+    store.onDidChange('watchFolder', updateWatcher)
+    updateWatcher()
+
+    ipcMain.on('state', (_, raw) => {
+        const message = JSON.parse(raw)
+        state = message
+    })
+
+    ipcMain.on('configure', (_, raw) => {
+        const message = JSON.parse(raw)
+        store.set('token', message.token)
+        store.set('watchFolder', message.watchFolder)
+
+        mb.window.webContents.send('state', {
+            mode: 'idle'
+        })
+    })
+
+    ipcMain.on('app-upload', async () => {
+        const { filePaths } = await dialog.showOpenDialog({ properties: [ 'openFile' ] })
+        if (filePaths.length === 0) return
+        ipcMain.emit('drop', null, JSON.stringify({
+            path: filePaths[0]
+        }))
+    })
+
+    ipcMain.on('drop', async (_, raw) => {
+        const { path } = JSON.parse(raw)
+
+        try {
+            const { shortName, url } = await upload(path, (progress) => {
+                mb.window.webContents.send('state', {
+                    mode: 'uploading',
+                    name: pathLib.basename(path),
+                    progress
+                })
+            })
+            
+            mb.window.webContents.send('state', {
+                mode: 'uploaded',
+                name: pathLib.basename(path),
+                shortName,
+                url
+            })
+        } catch (error) {
+            mb.window.webContents.send('state', {
+                mode: 'upload-error',
+                message: error.message,
+                name: pathLib.basename(path)
+            })
+        }
+    })
+
+    ipcMain.on('quit', () => app.quit())
+    ipcMain.on('logout', () => {
+        store.delete('token')
+        store.reset('watchFolder')
+
+        mb.window.webContents.send('state', {
+            mode: 'unconfigured',
+            watchFolder: store.get('watchFolder') || '',
+            token: store.get('token') || ''
+        })
+    })
+
+    ipcMain.on('ready', () => {
+        if (state === initialState) {
+            if (store.get('watchFolder') && store.get('token')) {
+                mb.window.webContents.send('state', { mode: 'idle' })
+            } else {
+                mb.window.webContents.send('state', {
+                    mode: 'unconfigured',
+                    watchFolder: store.get('watchFolder') || '',
+                    token: store.get('token') || ''
+                })
+            }
+        } else {
+            mb.window.webContents.send('state', state)
         }
     })
     
