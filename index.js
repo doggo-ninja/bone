@@ -24,7 +24,7 @@ const upload = async (path, update = () => {}) => {
     })
     prog.on('progress', update)
 
-    const res = await fetch(`http://144.202.58.157/v1/upload?originalName=${encodeURIComponent(pathLib.basename(path))}`, {
+    const res = await fetch(`https://pat.doggo.ninja/v1/upload?originalName=${encodeURIComponent(pathLib.basename(path))}`, {
         method: 'POST',
         headers: {
             'Authorization': `Bearer ${store.get('token')}`,
