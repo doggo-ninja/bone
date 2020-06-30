@@ -28,8 +28,7 @@ const upload = async (path, update = () => {}) => {
         method: 'POST',
         headers: {
             'Authorization': `Bearer ${store.get('token')}`,
-            'Content-Type': 'application/octet-stream',
-            'Host': 'pat.doggo.ninja'
+            'Content-Type': 'application/octet-stream'
         },
         body: fs.createReadStream(path)
     })
