@@ -1,0 +1,22 @@
+language: node_js
+dist: bionic
+
+node_js:
+  - node
+
+os:
+  - osx
+  - linux
+  - windows
+
+before_install:
+  - if [ "$TRAVIS_OS_NAME" = "linux" || "$TRAVIS_OS_NAME" = "windows" ]; then unset CSC_KEY_PASSWORD CSC_LINK; fi
+
+script:
+  - yarn dist
+
+addons:
+  apt:
+    packages:
+      - fakeroot
+      - libc++1

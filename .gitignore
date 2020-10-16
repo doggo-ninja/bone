@@ -117,3 +117,6 @@ dist
 
 # DS_Store
 .DS_Store
+
+# Electron builder output
+dist/

@@ -1,9 +1,9 @@
 {
     "name": "bone",
     "description": "the desktop client for uploading to doggo.ninja",
-    "version": "0.1.2",
+    "version": "0.2.0",
     "author": "Kognise",
-    "main": "index.js",
+    "main": "app.js",
     "repository": {
         "type": "git",
         "url": "https://github.com/kognise/bone.git"
@@ -11,22 +11,18 @@
     "dependencies": {
         "chokidar": "^3.4.0",
         "electron-store": "^5.1.1",
+        "electron-updater": "^4.3.5",
         "menubar": "^8.0.2",
         "node-fetch": "^2.6.0",
         "progress-stream": "^2.0.0"
     },
     "scripts": {
-        "start": "electron-forge start",
-        "make": "electron-forge make",
-        "release": "electron-forge publish"
+        "start": "electron .",
+        "pack": "electron-builder --dir",
+        "dist": "electron-builder"
     },
     "devDependencies": {
-        "@electron-forge/cli": "6.0.0-beta.51",
-        "@electron-forge/maker-dmg": "^6.0.0-beta.51",
-        "@electron-forge/publisher-github": "^6.0.0-beta.51",
-        "electron": "^9.0.0"
-    },
-    "config": {
-        "forge": "forge.config.js"
+        "electron": "^9.0.0",
+        "electron-builder": "^22.9.1"
     }
 }
