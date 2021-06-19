@@ -1,29 +1,32 @@
+const fs = require('fs')
+
+if (process.env.NODE_ENV !== 'development' && !process.env.APPLE_ID_PASSWORD) {
+    console.error('Please specify APPLE_ID_PASSWORD environment variable!')
+    process.exit(1)
+}
+
 module.exports = {
     packagerConfig: {
-        icon: 'build/icon.icns'
+        icon: 'build/icon.icns',
+        appBundleId: 'ninja.doggo.bone',
+        osxSign: {
+            identity: 'Developer ID Application: Paul Mattick (LG65ZUW3QB)',
+            entitlements: 'build/entitlements.plist',
+            'hardened-runtime': true,
+            'gatekeeper-assess': false,
+            'entitlements-inherit': 'build/entitlements.plist',
+            'signature-flags': 'library',
+        },
+        osxNotarize: {
+            appleId: 'felix.mattick@gmail.com',
+            appleIdPassword: process.env.APPLE_ID_PASSWORD
+        }
     },
     makers: [
         {
-            name: '@electron-forge/maker-dmg',
+            name: '@electron-forge/maker-pkg',
             config: {
-                background: 'build/bacc.jpg',
-                iconSize: 84,
-                icon: 'build/icon.icns',
-                format: 'UDBZ',
-                contents: (opts) => [
-                    {
-                        x: 240,
-                        y: 296,
-                        type: 'file',
-                        path: opts.appPath
-                    },
-                    {
-                        x: 620,
-                        y: 290,
-                        type: 'link',
-                        path: '/Applications'
-                    }
-                ]
+                identity: 'Developer ID Installer: Paul Mattick (LG65ZUW3QB)'
             }
         }
     ],
@@ -38,5 +41,20 @@ module.exports = {
                 prerelease: true
             }
         }
-    ]
+    ],
+    hooks: {
+        postMake: (_, results) => {
+            return results.map((result) => ({
+                ...result,
+                artifacts: result.artifacts.map((artifact) => {
+                    const newArtifact = artifact.replace(
+                        `${result.packageJSON.name}-${result.packageJSON.version}`,
+                        `${result.packageJSON.name}-${result.packageJSON.version}-${result.arch}`
+                    )
+                    fs.renameSync(artifact, newArtifact)
+                    return newArtifact
+                })
+            }))
+        }
+    }
 }

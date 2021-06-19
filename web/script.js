@@ -1,5 +1,4 @@
 const { ipcRenderer, clipboard } = require('electron')
-const pathLib = require('path')
 
 const formatBytes = (bytes, decimals = 2) => {
     if (bytes === 0) return '0b'

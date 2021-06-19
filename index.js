@@ -8,7 +8,7 @@ const url = require('url')
 const progress = require('progress-stream')
 const fs = require('fs')
 
-app.setLoginItemSettings({ openAtLogin: true })
+app.setLoginItemSettings({ openAtLogin: process.env.NODE_ENV !== 'development' })
 
 const store = new Store({
     defaults: {
@@ -67,7 +67,8 @@ app.on('ready', () => {
         icon: pathLib.join(__dirname, 'assets', 'menubar-Template.png'),
         browserWindow: {
             webPreferences: {
-                nodeIntegration: true
+                nodeIntegration: true,
+                contextIsolation: false
             },
             backgroundColor: nativeTheme.shouldUseDarkColors ? '#000000' : '#ffffff'
         }
@@ -88,7 +89,7 @@ app.on('ready', () => {
 
         console.log(`watching ${store.get('watchFolder')}`)
 
-        watcher = chokidar.watch(curWatchFolder, { ignoreInitial: true }).on('add', async (path) => {
+        watcher = chokidar.watch(curWatchFolder, { ignoreInitial: true, depth: 0 }).on('add', async (path) => {
             if (!store.get('token')) return
             const basename = pathLib.basename(path)
         
