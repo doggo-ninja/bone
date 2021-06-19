@@ -21,11 +21,10 @@
         "make:arm64": "electron-forge make --arch arm64 --platform darwin",
         "make:x64": "electron-forge make --arch x64 --platform darwin",
         "make": "yarn make:arm64 && yarn make:x64",
-        "release": "yarn make && electron-forge publish --from-dry-run"
+        "release": "yarn make"
     },
     "devDependencies": {
         "@electron-forge/cli": "6.0.0-beta.57",
-        "@electron-forge/publisher-github": "^6.0.0-beta.57",
         "electron": "^13.1.2"
     },
     "config": {

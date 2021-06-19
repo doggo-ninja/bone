@@ -30,18 +30,6 @@ module.exports = {
             }
         }
     ],
-    publishers: [
-        {
-            name: '@electron-forge/publisher-github',
-            config: {
-                repository: {
-                    owner: 'kognise',
-                    name: 'bone'
-                },
-                prerelease: true
-            }
-        }
-    ],
     hooks: {
         postMake: (_, results) => {
             return results.map((result) => ({
