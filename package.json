@@ -13,7 +13,7 @@
         "chokidar": "^3.5.2",
         "electron-store": "^8.0.0",
         "menubar": "^9.0.4",
-        "node-fetch": "^2.6.1",
+        "node-fetch": "^2.6.7",
         "progress-stream": "^2.0.0"
     },
     "scripts": {
