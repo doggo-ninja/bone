@@ -1,13 +1,18 @@
-const Store = require('electron-store')
-const { menubar } = require('menubar')
-const { default: fetch } = require('node-fetch')
-const { app, ipcMain, dialog, nativeTheme, shell, clipboard, Notification } = require('electron')
-const chokidar = require('chokidar')
-const pathLib = require('path')
-const url = require('url')
-const progress = require('progress-stream')
-const fs = require('fs')
+import Store from 'electron-store'
+import { menubar } from 'menubar'
+import { default as fetch } from 'node-fetch'
+import { app, ipcMain, dialog, nativeTheme, shell, clipboard, Notification } from 'electron'
+import { watch } from 'chokidar'
+import { basename as _basename, join } from 'path'
+import { format } from 'url'
+import progress from 'progress-stream'
+import { statSync, createReadStream, readdirSync, unlink } from 'fs'
+import updater from 'update-electron-app'
+import { fileURLToPath } from 'url'
 
+const __dirname = fileURLToPath(new URL('.', import.meta.url))
+
+updater()
 app.setLoginItemSettings({ openAtLogin: process.env.NODE_ENV !== 'development' })
 
 const store = new Store({
@@ -17,20 +22,20 @@ const store = new Store({
 })
 
 const upload = async (path, update = () => {}) => {
-    const stat = fs.statSync(path)
+    const stat = statSync(path)
     const prog = progress({
         length: stat.size,
         time: 100
     })
     prog.on('progress', update)
 
-    const res = await fetch(`https://pat.doggo.ninja/v1/upload?originalName=${encodeURIComponent(pathLib.basename(path))}`, {
+    const res = await fetch(`https://pat.doggo.ninja/v1/upload?originalName=${encodeURIComponent(_basename(path))}`, {
         method: 'POST',
         headers: {
             'Authorization': `Bearer ${store.get('token')}`,
             'Content-Type': 'application/octet-stream'
         },
-        body: fs.createReadStream(path)
+        body: createReadStream(path)
     })
     const json = await res.json()
 
@@ -42,7 +47,7 @@ const upload = async (path, update = () => {}) => {
 
 app.on('ready', () => {
     try {
-        fs.readdirSync(store.get('watchFolder'))
+        readdirSync(store.get('watchFolder'))
     } catch {
         if (process.platform === 'darwin') {
             dialog.showMessageBoxSync({
@@ -59,19 +64,25 @@ app.on('ready', () => {
     }
 
     const mb = menubar({
-        index: url.format({
+        index: format({
             protocol: 'file',
             slashes: true,
-            pathname: pathLib.join(__dirname, 'web', 'index.html')
+            pathname: join(__dirname, 'web', 'index.html')
         }),
-        icon: pathLib.join(__dirname, 'assets', 'menubar-Template.png'),
+        icon: join(__dirname, 'assets', 'menubar-Template.png'),
         browserWindow: {
             webPreferences: {
                 nodeIntegration: true,
                 contextIsolation: false
             },
             backgroundColor: nativeTheme.shouldUseDarkColors ? '#000000' : '#ffffff'
-        }
+        },
+        showOnAllWorkspaces: false, // doesn't work, see https://github.com/maxogden/menubar/pull/442
+        showDockIcon: false
+    })
+
+    mb.on('after-create-window', () => {
+        mb.window.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true, skipTransformProcessType: true })
     })
 
     const initialState = {}
@@ -89,9 +100,9 @@ app.on('ready', () => {
 
         console.log(`watching ${store.get('watchFolder')}`)
 
-        watcher = chokidar.watch(curWatchFolder, { ignoreInitial: true, depth: 0 }).on('add', async (path) => {
+        watcher = watch(curWatchFolder, { ignoreInitial: true, depth: 0 }).on('add', async (path) => {
             if (!store.get('token')) return
-            const basename = pathLib.basename(path)
+            const basename = _basename(path)
         
             if (/\.(png|jpe?g|gif)$/.test(basename) && !basename.startsWith('.')) {
                 console.log(`uploading ${basename}...`)
@@ -120,7 +131,7 @@ app.on('ready', () => {
                     notification.on('click', () => shell.openExternal(json.url))
                     notification.show()
             
-                    fs.unlink(path, () => {})
+                    unlink(path, () => {})
                 } catch (error) {
                     const notification = new Notification({
                         title: 'An error occurred during upload!',
@@ -166,14 +177,14 @@ app.on('ready', () => {
             const { shortName, url } = await upload(path, (progress) => {
                 mb.window.webContents.send('state', {
                     mode: 'uploading',
-                    name: pathLib.basename(path),
+                    name: _basename(path),
                     progress
                 })
             })
             
             mb.window.webContents.send('state', {
                 mode: 'uploaded',
-                name: pathLib.basename(path),
+                name: _basename(path),
                 shortName,
                 url
             })
@@ -181,7 +192,7 @@ app.on('ready', () => {
             mb.window.webContents.send('state', {
                 mode: 'upload-error',
                 message: error.message,
-                name: pathLib.basename(path)
+                name: _basename(path)
             })
         }
     })

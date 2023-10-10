@@ -117,3 +117,5 @@ dist
 
 # DS_Store
 .DS_Store
+
+.credentials.cjs
